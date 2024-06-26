@@ -1,27 +1,45 @@
-import React, { useEffect, useState } from 'react'
-import { PokemonCard } from './PokemonCard'
-import axios from 'axios'
-import './style.css'
+/** @format */
+
+import React, { useEffect, useState } from "react";
+import { PokemonCard } from "./components/PokemonCard";
+import axios from "axios";
+import "./style.css";
+import Toast from "./components/Toast";
 
 const IndexPage = () => {
-  const [pokemonList, setPokemonList] = useState([])
-  const [createPokemon, setCreatePokemon] = useState(false)
-  const [updateList, setUpdateList] = useState(0)
+  const [pokemonList, setPokemonList] = useState([]);
+  const [createPokemon, setCreatePokemon] = useState(false);
+  const [updateList, setUpdateList] = useState(0);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const showToast = (message) => {
+    console.log(message);
+    setToastMessage(message);
+    setTimeout(() => {
+      setToastMessage("");
+    }, 5000);
+  };
 
   useEffect(() => {
-    const request = async () => {
-      const { data } = await axios.get('http://localhost:4000/')
-      setPokemonList(data)
-    }
-    setTimeout(request, 1500)
-  }, [updateList])
+    const fetchPokemons = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:4000/");
+
+        setPokemonList(data);
+      } catch (error) {
+        showToast("Erro ao buscar os Pokémons");
+        console.error("Erro ao buscar os Pokémons:", error);
+      }
+    };
+    fetchPokemons();
+  }, [updateList]);
 
   return (
     <main>
-      <h1>Coleção pessoal de POKÉMONS</h1>
-      <button onClick={() => setCreatePokemon(true)}>
-        Adicionar Pokémon à sua coleção
-      </button>
+      <div className="header">
+        <h1>Coleção pessoal de POKÉMONS</h1>
+        <button onClick={() => setCreatePokemon(true)}>Adicionar Pokémon</button>
+      </div>
       {createPokemon && (
         <div className="create-card">
           <PokemonCard
@@ -29,24 +47,29 @@ const IndexPage = () => {
             setCreatePokemon={setCreatePokemon}
             updateList={updateList}
             setUpdateList={setUpdateList}
+            showToast={showToast}
           />
         </div>
       )}
       <div className="pokemon-container">
-        {pokemonList.map(({ _id, name, imageUrl, evolution }) => (
+        {pokemonList.map(({ id, name, imageUrl, evolution }) => (
           <PokemonCard
-            key={_id}
-            id={_id}
+            key={id}
+            id={id}
             name={name}
             image={imageUrl}
             evolution={evolution}
             updateList={updateList}
             setUpdateList={setUpdateList}
+            showToast={showToast}
           />
         ))}
       </div>
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage("")} />
+      )}
     </main>
-  )
-}
+  );
+};
 
-export default IndexPage
+export default IndexPage;
